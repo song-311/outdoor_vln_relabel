@@ -1,0 +1,8 @@
+{
+  "source_root": "D:\\Instruct-Nav\\outputs\\demo_folder_pose",
+  "scene_id": "folder_scene",
+  "sequence_id": "folder_seq",
+  "dataset_name": "folder_pose",
+  "num_frames": 100,
+  "copy_files": false
+}

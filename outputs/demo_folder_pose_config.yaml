@@ -1,0 +1,39 @@
+﻿dataset:
+  name: demo_folder_pose_config
+  root: "outputs/demo_folder_pose"
+  scene_id: config_scene
+  sequence_id: config_seq
+
+paths:
+  image_dir: "frames"
+  mask_dir: null
+  pose_file: "poses.csv"
+  output_dir: "outputs/demo_config_manifest"
+  copy_files: false
+
+pose_file:
+  format: csv
+  delimiter: ","
+  columns:
+    frame_id: "frame_id"
+    timestamp: "timestamp"
+    x: "x"
+    y: "y"
+    yaw: "yaw"
+    rgb_path: null
+    semantic_path: null
+    terrain: null
+    landmarks: null
+
+image_matching:
+  mode: by_frame_id
+  frame_pattern: "{frame_id:06d}.jpg"
+
+semantic_matching:
+  mode: none
+  frame_pattern: "{frame_id:06d}.png"
+
+defaults:
+  terrain: grass
+  yaw_unit: rad
+  timestamp_unit: sec

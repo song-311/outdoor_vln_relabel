@@ -1,0 +1,9 @@
+{
+  "source_root": "D:\\Instruct-Nav\\outputs\\demo_folder_pose",
+  "pose_file": "D:\\Instruct-Nav\\outputs\\demo_folder_pose\\poses.csv",
+  "scene_id": "config_scene",
+  "sequence_id": "config_seq",
+  "dataset_name": "demo_folder_pose_config",
+  "num_frames": 100,
+  "copy_files": false
+}

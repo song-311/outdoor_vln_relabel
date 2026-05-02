@@ -1,0 +1,85 @@
+{
+  "mask_path": "outputs/demo_manifest_indexed/masks/000099.png",
+  "semantic_label_map": "outdoor_vln_relabel/configs/semantic_label_maps/generic_outdoor.yaml",
+  "label_statistics": {
+    "labels": [
+      {
+        "label_id": 1,
+        "name": "dirt road",
+        "outdoor_group": "dirt_trail",
+        "role": "follow",
+        "pixel_count": 5872,
+        "area_ratio": 0.6371527777777778,
+        "bbox": [
+          0,
+          0,
+          95,
+          95
+        ],
+        "center": [
+          47.5,
+          35.69618528610354
+        ]
+      },
+      {
+        "label_id": 5,
+        "name": "puddle",
+        "outdoor_group": "mud_water",
+        "role": "avoid",
+        "pixel_count": 3344,
+        "area_ratio": 0.3628472222222222,
+        "bbox": [
+          10,
+          44,
+          85,
+          95
+        ],
+        "center": [
+          47.5,
+          68.22727272727273
+        ]
+      }
+    ],
+    "height": 96,
+    "width": 96
+  },
+  "terrain": {
+    "dominant_terrain": "mud_water",
+    "terrain_distribution": {
+      "dirt_trail": 0.18756936736958935,
+      "grass": 0.0,
+      "mud_water": 0.8124306326304107,
+      "rough_terrain": 0.0,
+      "vegetation": 0.0
+    },
+    "confidence": 0.8124306326304107
+  },
+  "landmarks": [
+    {
+      "name": "dirt road",
+      "category": "path_like",
+      "role": "follow",
+      "relation": "ahead",
+      "bbox": [
+        0,
+        0,
+        95,
+        95
+      ],
+      "score": 0.95
+    },
+    {
+      "name": "puddle",
+      "category": "obstacle_like",
+      "role": "avoid",
+      "relation": "ahead",
+      "bbox": [
+        10,
+        44,
+        85,
+        95
+      ],
+      "score": 0.95
+    }
+  ]
+}

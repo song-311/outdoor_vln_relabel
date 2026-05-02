@@ -1,0 +1,9 @@
+{
+  "input_jsonl": "outputs/demo_real_pilot_run/pairs_v4_rewritten.jsonl",
+  "issues_jsonl": "outputs/demo_real_pilot_run/issues.jsonl",
+  "output_dir": "outputs\\demo_real_pilot_run\\failure_cases",
+  "total_issues": 0,
+  "exported_cases": 0,
+  "failure_cases_jsonl": "outputs\\demo_real_pilot_run\\failure_cases\\failure_cases.jsonl",
+  "failure_cases_md": "outputs\\demo_real_pilot_run\\failure_cases\\failure_cases.md"
+}

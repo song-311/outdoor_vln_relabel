@@ -1,0 +1,65 @@
+{
+  "input_jsonl": "outputs/demo_real_pilot_run/pairs_v4_rewritten.jsonl",
+  "qa_report": null,
+  "output_dir": "outputs\\demo_real_pilot_run\\paper_tables",
+  "stats": {
+    "total_pairs": 24,
+    "unique_scenes": 1,
+    "unique_segments": 2,
+    "version_counts": {
+      "evidence_landmark_terrain_motion_v3": 6,
+      "rewritten_evidence_landmark_terrain_motion_v4": 18
+    },
+    "rewrite_source_counts": {
+      "rule_based": 18
+    },
+    "rewrite_counts": {
+      "original": 6,
+      "rewritten": 18
+    },
+    "terrain_counts": {
+      "dirt_trail": 12,
+      "mud_water": 12
+    },
+    "motion_counts": {
+      "forward": 12,
+      "forward_left": 12
+    },
+    "instruction_length": {
+      "min": 12,
+      "max": 18,
+      "mean": 16.083333,
+      "median": 16.0
+    },
+    "landmark_counts": {
+      "total_landmarks": 60,
+      "avg_landmarks_per_pair": 2.5,
+      "landmark_name_counts": {
+        "bush": 12,
+        "dirt road": 24,
+        "puddle": 24
+      },
+      "landmark_role_counts": {
+        "avoid": 36,
+        "follow": 24
+      },
+      "landmark_relation_counts": {
+        "ahead": 48,
+        "front_right": 12
+      }
+    },
+    "confidence": {
+      "min": 0.95,
+      "max": 0.95,
+      "mean": 0.95,
+      "median": 0.95
+    }
+  },
+  "tables": {
+    "terrain_distribution": "outputs\\demo_real_pilot_run\\paper_tables\\terrain_distribution.csv",
+    "motion_distribution": "outputs\\demo_real_pilot_run\\paper_tables\\motion_distribution.csv",
+    "landmark_role_distribution": "outputs\\demo_real_pilot_run\\paper_tables\\landmark_role_distribution.csv",
+    "landmark_relation_distribution": "outputs\\demo_real_pilot_run\\paper_tables\\landmark_relation_distribution.csv",
+    "version_distribution": "outputs\\demo_real_pilot_run\\paper_tables\\version_distribution.csv"
+  }
+}
