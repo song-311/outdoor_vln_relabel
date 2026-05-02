@@ -1,0 +1,26 @@
+terrain_classes:
+  dirt_trail:
+    aliases: ["dirt road", "trail", "unpaved road", "forest path", "dirt trail"]
+    followable: true
+    avoidable: false
+    default_role: follow
+  grass:
+    aliases: ["grass", "meadow", "grass field", "short grass", "tall grass"]
+    followable: true
+    avoidable: false
+    default_role: cross
+  vegetation:
+    aliases: ["bush", "shrub", "dense vegetation", "vegetation"]
+    followable: false
+    avoidable: true
+    default_role: avoid
+  mud_water:
+    aliases: ["mud", "puddle", "water", "wet ground", "muddy area"]
+    followable: false
+    avoidable: true
+    default_role: avoid
+  rough_terrain:
+    aliases: ["rock", "gravel", "slope", "uneven ground", "rough terrain"]
+    followable: true
+    avoidable: true
+    default_role: cautious_follow

@@ -1,0 +1,17 @@
+version: terrain_motion_v1
+sequence_id: default_sequence
+segment:
+  min_dist: 3.0
+  max_dist: 12.0
+  min_duration: 4.0
+  max_duration: 15.0
+  max_heading_change_deg: 70.0
+language:
+  instruction_variants: 3
+terrain:
+  mode: dummy
+  default: dirt_trail
+landmark:
+  mode: dummy
+validation:
+  enabled: true

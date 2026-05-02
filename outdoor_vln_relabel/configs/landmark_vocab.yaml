@@ -1,0 +1,64 @@
+landmark_categories:
+  path_like:
+    default_role: follow
+    names:
+      - dirt trail
+      - forest path
+      - grass path
+      - open path
+      - narrow trail
+
+  obstacle_like:
+    default_role: avoid
+    names:
+      - bush
+      - shrub
+      - rock
+      - puddle
+      - mud
+      - water
+      - tree trunk
+      - fallen branch
+
+  object_like:
+    default_role: go_toward
+    names:
+      - large tree
+      - bridge
+      - fence
+      - gate
+      - wooden pole
+      - sign
+
+  region_like:
+    default_role: go_toward
+    names:
+      - open area
+      - clearing
+      - forest edge
+      - grass field
+
+  geometry_like:
+    default_role: pass_between
+    names:
+      - slope
+      - left bend
+      - right bend
+      - narrow passage
+      - gap between bushes
+
+relations:
+  - left
+  - right
+  - ahead
+  - front_left
+  - front_right
+  - near
+
+roles:
+  - follow
+  - avoid
+  - turn_at
+  - pass_between
+  - stop_near
+  - go_toward

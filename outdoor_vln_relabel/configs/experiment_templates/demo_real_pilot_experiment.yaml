@@ -1,0 +1,17 @@
+experiment:
+  name: demo_real_pilot_exp
+  output_root: outputs/experiments/demo_real_pilot_exp
+
+pilots:
+  - name: demo_indexed_pilot
+    config: outdoor_vln_relabel/configs/real_dataset_pilots/demo_indexed_pilot.yaml
+    scene_id: demo_real_pilot
+    semantic_label_map: outdoor_vln_relabel/configs/semantic_label_maps/generic_outdoor.yaml
+    default_terrain: dirt_trail
+    terrain_mode: metadata_or_mask
+    landmark_mode: metadata_or_mask
+    rewrite_backend: rule_based
+    num_rewrites: 3
+    num_vis_samples: 5
+    max_frames: 1000
+    manual_audit_samples: 10

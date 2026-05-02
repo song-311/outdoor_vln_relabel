@@ -1,0 +1,65 @@
+name: generic_outdoor
+mask_type: indexed
+
+labels:
+  0:
+    name: background
+    outdoor_group: unknown
+    role: ignore
+
+  1:
+    name: dirt road
+    outdoor_group: dirt_trail
+    role: follow
+
+  2:
+    name: grass
+    outdoor_group: grass
+    role: follow
+
+  3:
+    name: bush
+    outdoor_group: vegetation
+    role: avoid
+
+  4:
+    name: mud
+    outdoor_group: mud_water
+    role: avoid
+
+  5:
+    name: puddle
+    outdoor_group: mud_water
+    role: avoid
+
+  6:
+    name: rock
+    outdoor_group: rough_terrain
+    role: avoid
+
+  7:
+    name: tree trunk
+    outdoor_group: vegetation
+    role: avoid
+
+  8:
+    name: gravel
+    outdoor_group: rough_terrain
+    role: cautious_follow
+
+terrain_groups:
+  dirt_trail:
+    followable: true
+    avoidable: false
+  grass:
+    followable: true
+    avoidable: false
+  vegetation:
+    followable: false
+    avoidable: true
+  mud_water:
+    followable: false
+    avoidable: true
+  rough_terrain:
+    followable: true
+    avoidable: true

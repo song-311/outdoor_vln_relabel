@@ -1,0 +1,17 @@
+experiment:
+  name: rellis3d_pilot_exp
+  output_root: outputs/experiments/rellis3d_pilot_exp
+
+pilots:
+  - name: rellis_seq_000
+    config: path/to/rellis_seq_000.yaml
+    scene_id: rellis_seq_000
+    semantic_label_map: outdoor_vln_relabel/configs/semantic_label_maps/rellis3d_template.yaml
+    default_terrain: dirt_trail
+    terrain_mode: metadata_or_mask
+    landmark_mode: metadata_or_mask
+    rewrite_backend: rule_based
+    num_rewrites: 3
+    num_vis_samples: 20
+    max_frames: 1000
+    manual_audit_samples: 100

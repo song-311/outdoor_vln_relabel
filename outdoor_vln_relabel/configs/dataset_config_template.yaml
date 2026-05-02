@@ -1,0 +1,40 @@
+dataset:
+  name: generic_outdoor_dataset
+  root: ""
+  scene_id: scene_001
+  sequence_id: seq_001
+
+paths:
+  image_dir: "frames"
+  mask_dir: null
+  pose_file: "poses.csv"
+  output_dir: "outputs/manifest_dataset"
+  copy_files: false
+
+pose_file:
+  format: csv
+  delimiter: ","
+  columns:
+    frame_id: "frame_id"
+    timestamp: "timestamp"
+    x: "x"
+    y: "y"
+    yaw: "yaw"
+    rgb_path: "rgb_path"
+    semantic_path: null
+    terrain: null
+    landmarks: null
+
+image_matching:
+  mode: from_pose_file
+  frame_pattern: "{frame_id:06d}.jpg"
+
+semantic_matching:
+  mode: none
+  frame_pattern: "{frame_id:06d}.png"
+
+defaults:
+  terrain: dirt_trail
+  yaw_unit: rad
+  timestamp_unit: sec
+

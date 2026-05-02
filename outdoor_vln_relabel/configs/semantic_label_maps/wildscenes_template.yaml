@@ -1,0 +1,51 @@
+name: wildscenes_template
+mask_type: indexed
+
+# Template only. Update ids after aligning WildScenes semantic classes to the
+# five Outdoor-VLN terrain groups.
+labels:
+  0:
+    name: background
+    outdoor_group: unknown
+    role: ignore
+  1:
+    name: trail
+    outdoor_group: dirt_trail
+    role: follow
+  2:
+    name: grass
+    outdoor_group: grass
+    role: follow
+  3:
+    name: vegetation
+    outdoor_group: vegetation
+    role: avoid
+  4:
+    name: water
+    outdoor_group: mud_water
+    role: avoid
+  5:
+    name: rock
+    outdoor_group: rough_terrain
+    role: avoid
+  6:
+    name: gravel
+    outdoor_group: rough_terrain
+    role: cautious_follow
+
+terrain_groups:
+  dirt_trail:
+    followable: true
+    avoidable: false
+  grass:
+    followable: true
+    avoidable: false
+  vegetation:
+    followable: false
+    avoidable: true
+  mud_water:
+    followable: false
+    avoidable: true
+  rough_terrain:
+    followable: true
+    avoidable: true
