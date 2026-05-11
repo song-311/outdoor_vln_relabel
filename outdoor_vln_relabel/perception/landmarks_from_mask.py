@@ -90,6 +90,50 @@ def _landmark_name(name: str, outdoor_group: str) -> str:
     return cleaned
 
 
+SAFETY_CRITICAL_NAMES = {"person", "pedestrian", "rider", "cyclist", "motorcyclist"}
+
+
+def _is_safety_critical(name: str, role: str) -> bool:
+    """Return True when a label should be kept regardless of outdoor_group."""
+    cleaned = _clean_name(name)
+    return cleaned in SAFETY_CRITICAL_NAMES and role != "ignore"
+
+
+def _category_score_range(name: str, category: str, role: str) -> Tuple[float, float]:
+    """Return (min_score, max_score) for a landmark based on its semantic class."""
+    cleaned = _clean_name(name)
+    if cleaned in SAFETY_CRITICAL_NAMES:
+        return (0.90, 0.98)
+    if any(tok in cleaned for tok in ("puddle", "mud", "water", "wet")):
+        return (0.82, 0.96)
+    if any(tok in cleaned for tok in ("tree", "bush", "shrub", "vegetation", "trunk")):
+        return (0.75, 0.93)
+    if any(tok in cleaned for tok in ("grass", "meadow", "clearing", "open area")):
+        return (0.70, 0.90)
+    if role in ("follow", "go_toward"):
+        return (0.70, 0.90)
+    if role == "avoid":
+        return (0.75, 0.93)
+    return (0.60, 0.85)
+
+
+def _compute_heuristic_score(
+    area_ratio: float,
+    bbox: List[int],
+    name: str,
+    category: str,
+    role: str,
+) -> float:
+    """Compute a varied heuristic evidence score based on area and category."""
+    min_score, max_score = _category_score_range(name, category, role)
+    # Map area_ratio (0 to ~0.6) into [0, 1] with saturation at 0.35
+    normalized = min(1.0, max(0.0, area_ratio / 0.35))
+    # Add small deterministic jitter from name hash to avoid uniform clustering
+    name_hash = float(hash(_clean_name(name)) % 100) / 5000.0
+    raw = min_score + (max_score - min_score) * normalized + name_hash
+    return round(min(max_score, max(min_score, raw)), 6)
+
+
 def detect_landmarks_from_mask(
     mask_path: str,
     label_map: Dict[str, Any],
@@ -108,25 +152,31 @@ def detect_landmarks_from_mask(
     for label in parsed["labels"]:
         outdoor_group = str(label.get("outdoor_group", "unknown"))
         role = str(label.get("role", "ignore"))
-        if role == "ignore" or outdoor_group == "unknown":
+        label_name = str(label.get("name", "unknown"))
+        # Keep safety-critical labels (person, pedestrian, etc.) even when
+        # outdoor_group is unknown, as long as role is not ignore.
+        if role == "ignore":
+            continue
+        if outdoor_group == "unknown" and not _is_safety_critical(label_name, role):
             continue
         area_ratio = float(label.get("area_ratio", 0.0))
         if area_ratio < min_area_ratio:
             continue
-        name = _landmark_name(str(label.get("name", "unknown")), outdoor_group)
+        name = _landmark_name(label_name, outdoor_group)
         category, landmark_role = _infer_category_and_role(name, outdoor_group, role)
         relation = _relation_from_center(label.get("center", [0.0, 0.0]), width, height)
         if category == "path_like" and landmark_role == "follow":
             relation = "ahead"
-        score = min(0.95, 0.5 + area_ratio * 5.0)
+        bbox = [int(value) for value in label.get("bbox", [])]
+        score = _compute_heuristic_score(area_ratio, bbox, name, category, landmark_role)
         landmarks.append(
             Landmark(
                 name=name,
                 category=category,
                 role=landmark_role,
                 relation=relation,
-                bbox=[int(value) for value in label.get("bbox", [])],
-                score=round(float(score), 6),
+                bbox=bbox,
+                score=score,
             )
         )
     return sorted(landmarks, key=lambda landmark: -landmark.score)

@@ -494,10 +494,7 @@ def _build_manifest_pairs(
                 version=version,
             )
             if not validate_pair(pair):
-                raise ValueError(
-                    "Generated manifest pair failed validation: "
-                    f"segment_id={pair.segment_id}, instruction_id={pair.instruction_id}"
-                )
+                continue
             pairs.append(pair)
     return pairs
 

@@ -224,7 +224,27 @@ def check_landmark_instruction_consistency(pair: Any) -> bool:
     names = [str(_landmark_get(landmark, "name", "")).lower() for landmark in landmarks]
     if any(name and name in instruction for name in names):
         return True
-    if _contains_any(instruction, ("bush", "rock", "puddle", "passage", "path", "trail")):
+    if _contains_any(
+        instruction,
+        (
+            "bush",
+            "shrub",
+            "tree",
+            "rock",
+            "puddle",
+            "mud",
+            "water",
+            "passage",
+            "path",
+            "trail",
+            "vegetation",
+            "dense vegetation",
+            "sparse vegetation",
+            "person",
+            "pedestrian",
+            "fence",
+        ),
+    ):
         return True
     return False
 

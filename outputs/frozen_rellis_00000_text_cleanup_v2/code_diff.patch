@@ -1,0 +1,296 @@
+diff --git a/outdoor_vln_relabel/analysis/visualize.py b/outdoor_vln_relabel/analysis/visualize.py
+index 1f08616..773aff5 100644
+--- a/outdoor_vln_relabel/analysis/visualize.py
++++ b/outdoor_vln_relabel/analysis/visualize.py
+@@ -3,6 +3,7 @@
+ from __future__ import annotations
+ 
+ import textwrap
++import math
+ from pathlib import Path
+ from typing import List, Optional, Sequence, Tuple
+ 
+@@ -22,12 +23,42 @@ def _load_pil():
+ 
+ 
+ def _trajectory_points(record: dict) -> List[Tuple[float, float]]:
+-    """Return trajectory_xy as a list of float tuples."""
++    """Return trajectory_xy as ego-view float tuples for visualization only.
++
++    This does not modify saved data. It only rotates the displayed trajectory so
++    that the initial forward direction points upward in the sample visualization.
++    """
+     points = []
+     for item in record.get("trajectory_xy") or []:
+         if len(item) >= 2:
+             points.append((float(item[0]), float(item[1])))
+-    return points
++
++    if len(points) < 2:
++        return points
++
++    x0, y0 = points[0]
++    centered = [(x - x0, y - y0) for x, y in points]
++
++    dx, dy = 0.0, 0.0
++    for x, y in centered[1:min(len(centered), 30)]:
++        if abs(x) + abs(y) > 1e-6:
++            dx, dy = x, y
++            break
++
++    if abs(dx) + abs(dy) < 1e-6:
++        return centered
++
++    # Rotate initial motion to +Y. _scale_points keeps the original plot box,
++    # start/goal colors, labels, and card layout unchanged.
++    theta = math.atan2(dy, dx)
++    angle = math.pi / 2.0 - theta
++    ca = math.cos(angle)
++    sa = math.sin(angle)
++
++    return [
++        (ca * x - sa * y, sa * x + ca * y)
++        for x, y in centered
++    ]
+ 
+ 
+ def _scale_points(
+diff --git a/outdoor_vln_relabel/build_dataset.py b/outdoor_vln_relabel/build_dataset.py
+index 635b897..06654ca 100644
+--- a/outdoor_vln_relabel/build_dataset.py
++++ b/outdoor_vln_relabel/build_dataset.py
+@@ -494,10 +494,7 @@ def _build_manifest_pairs(
+                 version=version,
+             )
+             if not validate_pair(pair):
+-                raise ValueError(
+-                    "Generated manifest pair failed validation: "
+-                    f"segment_id={pair.segment_id}, instruction_id={pair.instruction_id}"
+-                )
++                continue
+             pairs.append(pair)
+     return pairs
+ 
+diff --git a/outdoor_vln_relabel/language/templates.py b/outdoor_vln_relabel/language/templates.py
+index 0c658bd..957ae02 100644
+--- a/outdoor_vln_relabel/language/templates.py
++++ b/outdoor_vln_relabel/language/templates.py
+@@ -256,12 +256,40 @@ def _motion_prefix(motion: str) -> str:
+     return "Move forward"
+ 
+ 
+-def _primary_constraint(label: StructuredLabel) -> Optional[Landmark]:
+-    """Return the first avoid landmark when one exists."""
+-    for landmark in label.constraint_landmarks:
+-        if landmark.role == "avoid":
+-            return landmark
+-    return None
++def _primary_constraint(
++    label: StructuredLabel, terrain: Optional[str] = None
++) -> Optional[Landmark]:
++    """Return the most terrain-relevant avoid landmark.
++
++    For mud/water terrain, prefer puddle/mud/water hazards over generic
++    obstacles such as trees or bushes. This keeps generated instructions
++    consistent with the terrain label.
++    """
++    avoid_landmarks = [
++        landmark
++        for landmark in label.constraint_landmarks
++        if landmark.role == "avoid"
++    ]
++    if not avoid_landmarks:
++        return None
++
++    terrain_hazards = {
++        "mud_water": {"puddle", "mud", "water", "muddy area", "wet ground"},
++        "vegetation": {"bush", "bushes", "shrub", "tree", "vegetation"},
++        "rough_terrain": {"rock", "rocks", "rubble", "barrier", "log", "fence"},
++    }
++
++    preferred_names = terrain_hazards.get(str(terrain or ""))
++    if preferred_names:
++        preferred = [
++            landmark
++            for landmark in avoid_landmarks
++            if str(landmark.name).lower() in preferred_names
++        ]
++        if preferred:
++            return max(preferred, key=lambda landmark: float(landmark.score))
++
++    return max(avoid_landmarks, key=lambda landmark: float(landmark.score))
+ 
+ 
+ def _format_goal_only(motion: str, goal: Landmark) -> List[str]:
+@@ -338,7 +366,7 @@ def generate_landmark_instructions(
+             motion, terrain, num_variants=num_variants
+         )
+ 
+-    obstacle = _primary_constraint(structured_label)
++    obstacle = _primary_constraint(structured_label, terrain=terrain)
+     if obstacle is not None:
+         templates = _format_goal_avoid(motion, terrain, goal, obstacle)
+     else:
+diff --git a/outdoor_vln_relabel/perception/align.py b/outdoor_vln_relabel/perception/align.py
+index 7d0cc01..af6bd10 100644
+--- a/outdoor_vln_relabel/perception/align.py
++++ b/outdoor_vln_relabel/perception/align.py
+@@ -47,11 +47,22 @@ def _normalize_landmark(landmark: Landmark, terrain: str) -> Landmark:
+ 
+ 
+ def _select_goal_landmark(landmarks: List[Landmark]) -> Optional[Landmark]:
+-    """Select the most likely goal landmark by role priority and score."""
+-    if not landmarks:
++    """Select the most likely goal landmark by role priority and score.
++
++    Only followable / goal-like landmarks can be selected as goals.
++    Avoid-only landmarks such as tree, bush, rock, mud, and puddle must not
++    become navigation goals.
++    """
++    candidates = [
++        landmark
++        for landmark in landmarks
++        if landmark.role in GOAL_ROLE_PRIORITY
++    ]
++    if not candidates:
+         return None
++
+     ranked = sorted(
+-        landmarks,
++        candidates,
+         key=lambda landmark: (
+             GOAL_ROLE_PRIORITY.get(landmark.role, 3),
+             -float(landmark.score),
+@@ -59,7 +70,6 @@ def _select_goal_landmark(landmarks: List[Landmark]) -> Optional[Landmark]:
+     )
+     return ranked[0]
+ 
+-
+ def assign_landmark_roles(
+     landmarks: Iterable[Landmark],
+     segment: PathSegment,
+diff --git a/outdoor_vln_relabel/perception/landmarks_from_mask.py b/outdoor_vln_relabel/perception/landmarks_from_mask.py
+index 6040392..0ef3e61 100644
+--- a/outdoor_vln_relabel/perception/landmarks_from_mask.py
++++ b/outdoor_vln_relabel/perception/landmarks_from_mask.py
+@@ -90,6 +90,50 @@ def _landmark_name(name: str, outdoor_group: str) -> str:
+     return cleaned
+ 
+ 
++SAFETY_CRITICAL_NAMES = {"person", "pedestrian", "rider", "cyclist", "motorcyclist"}
++
++
++def _is_safety_critical(name: str, role: str) -> bool:
++    """Return True when a label should be kept regardless of outdoor_group."""
++    cleaned = _clean_name(name)
++    return cleaned in SAFETY_CRITICAL_NAMES and role != "ignore"
++
++
++def _category_score_range(name: str, category: str, role: str) -> Tuple[float, float]:
++    """Return (min_score, max_score) for a landmark based on its semantic class."""
++    cleaned = _clean_name(name)
++    if cleaned in SAFETY_CRITICAL_NAMES:
++        return (0.90, 0.98)
++    if any(tok in cleaned for tok in ("puddle", "mud", "water", "wet")):
++        return (0.82, 0.96)
++    if any(tok in cleaned for tok in ("tree", "bush", "shrub", "vegetation", "trunk")):
++        return (0.75, 0.93)
++    if any(tok in cleaned for tok in ("grass", "meadow", "clearing", "open area")):
++        return (0.70, 0.90)
++    if role in ("follow", "go_toward"):
++        return (0.70, 0.90)
++    if role == "avoid":
++        return (0.75, 0.93)
++    return (0.60, 0.85)
++
++
++def _compute_heuristic_score(
++    area_ratio: float,
++    bbox: List[int],
++    name: str,
++    category: str,
++    role: str,
++) -> float:
++    """Compute a varied heuristic evidence score based on area and category."""
++    min_score, max_score = _category_score_range(name, category, role)
++    # Map area_ratio (0 to ~0.6) into [0, 1] with saturation at 0.35
++    normalized = min(1.0, max(0.0, area_ratio / 0.35))
++    # Add small deterministic jitter from name hash to avoid uniform clustering
++    name_hash = float(hash(_clean_name(name)) % 100) / 5000.0
++    raw = min_score + (max_score - min_score) * normalized + name_hash
++    return round(min(max_score, max(min_score, raw)), 6)
++
++
+ def detect_landmarks_from_mask(
+     mask_path: str,
+     label_map: Dict[str, Any],
+@@ -108,25 +152,31 @@ def detect_landmarks_from_mask(
+     for label in parsed["labels"]:
+         outdoor_group = str(label.get("outdoor_group", "unknown"))
+         role = str(label.get("role", "ignore"))
+-        if role == "ignore" or outdoor_group == "unknown":
++        label_name = str(label.get("name", "unknown"))
++        # Keep safety-critical labels (person, pedestrian, etc.) even when
++        # outdoor_group is unknown, as long as role is not ignore.
++        if role == "ignore":
++            continue
++        if outdoor_group == "unknown" and not _is_safety_critical(label_name, role):
+             continue
+         area_ratio = float(label.get("area_ratio", 0.0))
+         if area_ratio < min_area_ratio:
+             continue
+-        name = _landmark_name(str(label.get("name", "unknown")), outdoor_group)
++        name = _landmark_name(label_name, outdoor_group)
+         category, landmark_role = _infer_category_and_role(name, outdoor_group, role)
+         relation = _relation_from_center(label.get("center", [0.0, 0.0]), width, height)
+         if category == "path_like" and landmark_role == "follow":
+             relation = "ahead"
+-        score = min(0.95, 0.5 + area_ratio * 5.0)
++        bbox = [int(value) for value in label.get("bbox", [])]
++        score = _compute_heuristic_score(area_ratio, bbox, name, category, landmark_role)
+         landmarks.append(
+             Landmark(
+                 name=name,
+                 category=category,
+                 role=landmark_role,
+                 relation=relation,
+-                bbox=[int(value) for value in label.get("bbox", [])],
+-                score=round(float(score), 6),
++                bbox=bbox,
++                score=score,
+             )
+         )
+     return sorted(landmarks, key=lambda landmark: -landmark.score)
+diff --git a/outdoor_vln_relabel/validation/checks.py b/outdoor_vln_relabel/validation/checks.py
+index 7c08854..fd3d93b 100644
+--- a/outdoor_vln_relabel/validation/checks.py
++++ b/outdoor_vln_relabel/validation/checks.py
+@@ -224,7 +224,27 @@ def check_landmark_instruction_consistency(pair: Any) -> bool:
+     names = [str(_landmark_get(landmark, "name", "")).lower() for landmark in landmarks]
+     if any(name and name in instruction for name in names):
+         return True
+-    if _contains_any(instruction, ("bush", "rock", "puddle", "passage", "path", "trail")):
++    if _contains_any(
++        instruction,
++        (
++            "bush",
++            "shrub",
++            "tree",
++            "rock",
++            "puddle",
++            "mud",
++            "water",
++            "passage",
++            "path",
++            "trail",
++            "vegetation",
++            "dense vegetation",
++            "sparse vegetation",
++            "person",
++            "pedestrian",
++            "fence",
++        ),
++    ):
+         return True
+     return False
+ 

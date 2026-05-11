@@ -1,0 +1,124 @@
+name: rellis3d_official
+mask_type: indexed
+
+labels:
+  0:
+    name: void
+    outdoor_group: unknown
+    role: ignore
+
+  1:
+    name: dirt
+    outdoor_group: dirt_trail
+    role: follow
+
+  3:
+    name: grass
+    outdoor_group: grass
+    role: follow
+
+  4:
+    name: tree
+    outdoor_group: vegetation
+    role: avoid
+
+  5:
+    name: pole
+    outdoor_group: rough_terrain
+    role: avoid
+
+  6:
+    name: water
+    outdoor_group: mud_water
+    role: avoid
+
+  7:
+    name: sky
+    outdoor_group: unknown
+    role: ignore
+
+  8:
+    name: vehicle
+    outdoor_group: unknown
+    role: avoid
+
+  9:
+    name: object
+    outdoor_group: unknown
+    role: ignore
+
+  10:
+    name: asphalt
+    outdoor_group: dirt_trail
+    role: follow
+
+  12:
+    name: building
+    outdoor_group: unknown
+    role: ignore
+
+  15:
+    name: log
+    outdoor_group: rough_terrain
+    role: avoid
+
+  17:
+    name: person
+    outdoor_group: unknown
+    role: avoid
+
+  18:
+    name: fence
+    outdoor_group: rough_terrain
+    role: avoid
+
+  19:
+    name: bush
+    outdoor_group: vegetation
+    role: avoid
+
+  23:
+    name: concrete
+    outdoor_group: dirt_trail
+    role: follow
+
+  27:
+    name: barrier
+    outdoor_group: rough_terrain
+    role: avoid
+
+  31:
+    name: puddle
+    outdoor_group: mud_water
+    role: avoid
+
+  33:
+    name: mud
+    outdoor_group: mud_water
+    role: avoid
+
+  34:
+    name: rubble
+    outdoor_group: rough_terrain
+    role: avoid
+
+terrain_groups:
+  dirt_trail:
+    followable: true
+    avoidable: false
+
+  grass:
+    followable: true
+    avoidable: false
+
+  vegetation:
+    followable: false
+    avoidable: true
+
+  mud_water:
+    followable: false
+    avoidable: true
+
+  rough_terrain:
+    followable: true
+    avoidable: true

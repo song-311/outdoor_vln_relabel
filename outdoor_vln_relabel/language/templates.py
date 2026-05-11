@@ -256,12 +256,40 @@ def _motion_prefix(motion: str) -> str:
     return "Move forward"
 
 
-def _primary_constraint(label: StructuredLabel) -> Optional[Landmark]:
-    """Return the first avoid landmark when one exists."""
-    for landmark in label.constraint_landmarks:
-        if landmark.role == "avoid":
-            return landmark
-    return None
+def _primary_constraint(
+    label: StructuredLabel, terrain: Optional[str] = None
+) -> Optional[Landmark]:
+    """Return the most terrain-relevant avoid landmark.
+
+    For mud/water terrain, prefer puddle/mud/water hazards over generic
+    obstacles such as trees or bushes. This keeps generated instructions
+    consistent with the terrain label.
+    """
+    avoid_landmarks = [
+        landmark
+        for landmark in label.constraint_landmarks
+        if landmark.role == "avoid"
+    ]
+    if not avoid_landmarks:
+        return None
+
+    terrain_hazards = {
+        "mud_water": {"puddle", "mud", "water", "muddy area", "wet ground"},
+        "vegetation": {"bush", "bushes", "shrub", "tree", "vegetation"},
+        "rough_terrain": {"rock", "rocks", "rubble", "barrier", "log", "fence"},
+    }
+
+    preferred_names = terrain_hazards.get(str(terrain or ""))
+    if preferred_names:
+        preferred = [
+            landmark
+            for landmark in avoid_landmarks
+            if str(landmark.name).lower() in preferred_names
+        ]
+        if preferred:
+            return max(preferred, key=lambda landmark: float(landmark.score))
+
+    return max(avoid_landmarks, key=lambda landmark: float(landmark.score))
 
 
 def _format_goal_only(motion: str, goal: Landmark) -> List[str]:
@@ -338,7 +366,7 @@ def generate_landmark_instructions(
             motion, terrain, num_variants=num_variants
         )
 
-    obstacle = _primary_constraint(structured_label)
+    obstacle = _primary_constraint(structured_label, terrain=terrain)
     if obstacle is not None:
         templates = _format_goal_avoid(motion, terrain, goal, obstacle)
     else:

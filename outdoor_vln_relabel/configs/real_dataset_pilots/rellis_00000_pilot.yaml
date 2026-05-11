@@ -1,0 +1,48 @@
+dataset:
+  name: rellis_00000_pilot
+  root: "/home/song/Outdoor-VLN/data/rellis_00000_pilot"
+  scene_id: rellis_scene_00000
+  sequence_id: seq_00000
+  output_dir: outputs/rellis_00000_manifest
+
+paths:
+  image_dir: "frames"
+  mask_dir: "masks"
+  pose_file: "trajectory.csv"
+  image_ext: ".jpg"
+  mask_ext: ".png"
+
+pose_file:
+  format: csv
+  delimiter: ","
+  columns:
+    frame_id: "frame_id"
+    timestamp: "timestamp"
+    x: "x"
+    y: "y"
+    yaw: "yaw"
+    rgb_path: "rgb_path"
+    semantic_path: "semantic_path"
+    terrain: "terrain"
+    landmarks: "landmarks"
+
+matching:
+  image_mode: from_pose_file
+  image_pattern: ""
+  mask_mode: from_pose_file
+  mask_pattern: ""
+
+defaults:
+  terrain: dirt_trail
+  yaw_unit: rad
+  timestamp_unit: sec
+
+semantic:
+  label_map: outdoor_vln_relabel/configs/semantic_label_maps/rellis3d_template.yaml
+
+pilot:
+  max_frames: 1000
+  min_segment_distance: 3.0
+  max_segment_distance: 12.0
+  min_duration: 2.0
+  max_duration: 15.0

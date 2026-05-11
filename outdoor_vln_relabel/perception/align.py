@@ -47,18 +47,28 @@ def _normalize_landmark(landmark: Landmark, terrain: str) -> Landmark:
 
 
 def _select_goal_landmark(landmarks: List[Landmark]) -> Optional[Landmark]:
-    """Select the most likely goal landmark by role priority and score."""
-    if not landmarks:
+    """Select the most likely goal landmark by role priority and score.
+
+    Only followable / goal-like landmarks can be selected as goals.
+    Avoid-only landmarks such as tree, bush, rock, mud, and puddle must not
+    become navigation goals.
+    """
+    candidates = [
+        landmark
+        for landmark in landmarks
+        if landmark.role in GOAL_ROLE_PRIORITY
+    ]
+    if not candidates:
         return None
+
     ranked = sorted(
-        landmarks,
+        candidates,
         key=lambda landmark: (
             GOAL_ROLE_PRIORITY.get(landmark.role, 3),
             -float(landmark.score),
         ),
     )
     return ranked[0]
-
 
 def assign_landmark_roles(
     landmarks: Iterable[Landmark],
